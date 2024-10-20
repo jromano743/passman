@@ -8,38 +8,59 @@ class PasswordManager:
         self.password_dict = {}
     
     def create_key(self, path):
-        self.key = Fernet.generate_key()
-        with open(path, 'wb') as f:
-            f.write(self.key)
+        try:
+            self.key = Fernet.generate_key()
+            with open(path, 'wb') as f:
+                f.write(self.key)
+        except:
+            print(f"Error: File has not been created.")
 
     def load_key(self, path):
-        with open(path, 'rb') as f:
-            self.key = f.read() 
+        try:
+            with open(path, 'rb') as f:
+                self.key = f.read()
+        except:
+            print(f"Error: File has not been readed.")
     
-    def create_password_file(self, path, initial_values = None):
+    def create_password_file(self, path):
         self.password_file = path
+        try:
+            with open(self.password_file, 'w') as f:
+                f.write('')
+        except:
+            print(f"Error: File has not been created.")
+    
+    def load_password_file(self, path = None):
 
-        if initial_values is not None:
-            for key, value in initial_values.items():
-                self.add_password(key, value)
-    
-    def load_password_file(self, path):
-        self.password_file = path
-        with open(path, 'r') as f:
-            for line in f:
-                site, encrypted = line.split(":")
-                self.password_dict[site] = Fernet(self.key).decrypt(encrypted)
+        if path is not None:
+            self.password_file = path
+
+        try: 
+            with open(self.password_file, 'r') as f:
+                for line in f:
+                    site, encrypted = line.split(":")
+                    self.password_dict[site] = Fernet(self.key).decrypt(encrypted)
+        except:
+            print(f"Error: File has not been readed.")
 
     def add_password(self, site, password):
+        self.load_password_file(self.password_file)
         self.password_dict[site] = password
 
-        if self.password_file is not None:
-            with open(self.password_file, 'a+') as f:
-                encrypted = Fernet(self.key).encrypt(password.encode())
-                f.write(f"{site}:{encrypted.decode()}\n")
+        try:
+            if self.password_file is not None:
+                with open(self.password_file, 'a+') as f:
+                    encrypted = Fernet(self.key).encrypt(password.encode())
+                    f.write(f"{site}:{encrypted.decode()}\n")
+        except:
+            print(f"Error: The password has not been added.")
 
     def get_password(self, site):
-        return self.password_dict[site].decode()
+        try:
+            self.load_password_file(self.password_file)
+            return self.password_dict[site].decode()
+        except:
+            print(f"Error: The password has not been reader")
 
 def show_menu():
     print("")
@@ -56,7 +77,6 @@ def show_menu():
 def main():
 
     pm = PasswordManager()
-    password = {"base": "base"}
 
     while True:
         
@@ -75,7 +95,7 @@ def main():
         
         if opt == "3":
             path = input("Enter new password file path: ")
-            pm.create_password_file(path, password)
+            pm.create_password_file(path)
         
         if opt == "4":
             path = input("Enter password file path: ")
