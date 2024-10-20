@@ -1,3 +1,4 @@
 venv/
 keys/*
 passfiles/*
+__pycache__
